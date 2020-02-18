@@ -8,6 +8,7 @@ func GetLongestCommonSubsequenceLength(n, m *[]Diffable) uint32 {
 	}
 	matrix := make([][]uint32, len(a)+1)
 	for i, _ := range matrix {
+		//TODO: Remove redundant _ here
 		matrix[i] = make([]uint32, len(b)+1)
 	}
 	for i := 0; i <= len(b); i++ {
@@ -44,6 +45,7 @@ func GetLongestCommonSubsequence(one, other *[]Diffable) (uint32, *[]Diffable) {
 		return 0, &[]Diffable{}
 	}
 	matrix := make([][]uint32, len(a)+1)
+	//TODO: Remove redundant _ here
 	for i, _ := range matrix {
 		matrix[i] = make([]uint32, len(b)+1)
 	}

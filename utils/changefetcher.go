@@ -13,6 +13,7 @@ import (
 	"sync"
 )
 
+//TODO Use viper.GetBool here
 var Debug bool = false
 var filemap map[string][]byte = make(map[string][]byte, 0)
 var CacheHits int = 0
@@ -99,7 +100,7 @@ func GetStringFromHclSyntaxExpression(e hclsyntax.Expression) string {
 }
 
 func GetChangeLogString(orig, modif hcl.Range) (string, error) {
-	os, err := GetStringFromRange(orig)
+	origString, err := GetStringFromRange(orig)
 	if err != nil {
 		if Debug {
 			log.Printf("Cannot fetch original string from file %s", orig.Filename)
@@ -107,7 +108,7 @@ func GetChangeLogString(orig, modif hcl.Range) (string, error) {
 		return "", err
 	}
 
-	ms, err := GetStringFromRange(modif)
+	modifiedString, err := GetStringFromRange(modif)
 	if err != nil {
 		if Debug {
 			log.Printf("Cannot fetch modified string from file %s", orig.Filename)
@@ -115,6 +116,6 @@ func GetChangeLogString(orig, modif hcl.Range) (string, error) {
 		return "", err
 	}
 	arrow := color.YellowString("->")
-	ls := fmt.Sprintf("%s %s %s", os, arrow, ms)
+	ls := fmt.Sprintf("%s %s %s", origString, arrow, modifiedString)
 	return ls, nil
 }

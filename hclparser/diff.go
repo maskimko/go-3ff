@@ -65,6 +65,8 @@ func (edf *ExpressionDiff) Add(ctx ChangedExprContext) {
 func (atdf *AttributesDiff) Add(ctx ChangedAttributeContext) {
 	atdf.Changes = append(atdf.Changes, ctx)
 }
+
+//TODO: Use PrintParams here
 func (mr *ModifiedResources) analyzeAttributesDiff(orig, modif *Attributes, path []string, p *PrintParams) *AttributesDiff {
 	attributesDiff := &AttributesDiff{Changes: make([]ChangedAttributeContext, 0)}
 	if modif.Len() == 0 && orig.Len() == 0 {
@@ -242,9 +244,6 @@ func PrintAttributeContext(atdf *AttributesDiff, p *PrintParams) {
 	}
 }
 
-func computeHclExpressionsDiff(orig, modif []hcl.Expression) *ExpressionDiff {
-	return computeHclSyntaxExpressionsDiff(ConvertExpressionsHcl2HclS(orig), ConvertExpressionsHcl2HclS(modif))
-}
 func computeHclSyntaxExpressionsDiff(otce, mtce []hclsyntax.Expression) *ExpressionDiff {
 	ed := ExpressionDiff{Changes: make([]ChangedExprContext, 0), Changed: false}
 	otces := NewHclSyntaxExpressions(otce)
@@ -361,7 +360,7 @@ func analyzeExpressionDiff(orig, modif hclsyntax.Expression) *ExpressionDiff {
 			return computeHclSyntaxExpressionsDiff(otce.Exprs, mtce.Exprs)
 		} else {
 			//If type mismatch than the whole expression is a difference
-			changes := []ChangedExprContext{ChangedExprContext{Orig: orig, Modified: modif, ModificationType: 0,
+			changes := []ChangedExprContext{{Orig: orig, Modified: modif, ModificationType: 0,
 				OrigDiffValue: utils.GetStringFromHclSyntaxExpression(orig), ModifDiffVal: utils.GetStringFromHclSyntaxExpression(modif)}}
 			return &ExpressionDiff{Changes: changes, Changed: true}
 		}
@@ -371,7 +370,7 @@ func analyzeExpressionDiff(orig, modif hclsyntax.Expression) *ExpressionDiff {
 			return computeHclSyntaxExpressionsDiff(otmple.Parts, mtmple.Parts)
 		} else {
 			//If type mismatch than the whole expression is a difference
-			changes := []ChangedExprContext{ChangedExprContext{Orig: orig, Modified: modif, ModificationType: 0,
+			changes := []ChangedExprContext{{Orig: orig, Modified: modif, ModificationType: 0,
 				OrigDiffValue: utils.GetStringFromHclSyntaxExpression(orig), ModifDiffVal: utils.GetStringFromHclSyntaxExpression(modif)}}
 			return &ExpressionDiff{Changes: changes, Changed: true}
 		}

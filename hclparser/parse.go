@@ -5,9 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hashicorp/hcl2/hcl"
-	hclsyntax "github.com/hashicorp/hcl2/hcl/hclsyntax"
+	"github.com/hashicorp/hcl2/hcl/hclsyntax"
 	"github.com/hashicorp/hcl2/hclparse"
-	"github.com/zclconf/go-cty/cty"
 	"io/ioutil"
 	"log"
 	"os"
@@ -42,20 +41,20 @@ func CompareFiles(o, m *os.File) (*ModifiedResources, error) {
 	ofi, err := o.Stat()
 	if err != nil {
 		if Debug {
-			log.Printf("Cannot get File info of %s. Error message: %s", o, err)
+			log.Printf("Cannot get File info of %s. Error message: %s", o.Name(), err)
 		}
 		return nil, err
 	}
 	mfi, err := m.Stat()
 	if err != nil {
 		if Debug {
-			log.Printf("Cannot get File info of %s. Error message: %s", m, err)
+			log.Printf("Cannot get File info of %s. Error message: %s", m.Name(), err)
 		}
 		return nil, err
 	}
 	if ofi.IsDir() != mfi.IsDir() {
 		if Debug {
-			log.Printf("Both files you specified, should be directories, or both should be files\n%s %s", o, m)
+			log.Printf("Both files you specified, should be directories, or both should be files\n%s %s", o.Name(), m.Name())
 		}
 		return nil, errors.New("error: different file types: both files you specified, should be directories, or both should be files")
 	}
@@ -63,7 +62,7 @@ func CompareFiles(o, m *os.File) (*ModifiedResources, error) {
 	origFiles, err := getFilesSlice(o)
 	if err != nil {
 		if Debug {
-			log.Printf("Cannot build files list of the directory %s. Error: ", ofi.Name(), err)
+			log.Printf("Cannot build files list of the directory %s. Error: %s", ofi.Name(), err)
 		}
 		return nil, err
 	}
@@ -289,99 +288,4 @@ func (mr *ModifiedResources) computeLabelsDiff(o, m *Block, path []string) bool 
 		}
 	}
 	return true
-}
-
-func expressionEquals(a hclsyntax.Expression, b hclsyntax.Expression) bool {
-	if a == nil && b == nil {
-		return true
-	}
-	if ao, ok := a.(*hclsyntax.ObjectConsExpr); ok {
-		if bo, ok := b.(*hclsyntax.ObjectConsExpr); ok {
-			aem := ao.ExprMap()
-			bem := bo.ExprMap()
-			log.Println(aem)
-			log.Println(bem)
-		} else {
-			return false
-		}
-
-	}
-
-	var aval, bval cty.Value
-	if a == nil {
-		aval, adiag := a.Value(nil)
-		if adiag != nil && adiag.HasErrors() {
-			log.Printf("Cannot get value of expression Error: %s", adiag.Error())
-		}
-		if Debug {
-			log.Printf("Expression %s has been removed\n", aval.AsString())
-		}
-		return false
-	}
-	if b == nil {
-		bval, bdiag := b.Value(nil)
-		if bdiag != nil && bdiag.HasErrors() {
-			log.Printf("Cannot get value of expression Error: %s", bdiag.Error())
-		}
-		if Debug {
-			log.Printf("Expression %s has been added\n", bval.AsString())
-		}
-		return false
-	}
-
-	//By default it is assumed that object are equal unless a change was detected
-	var eq bool = true
-	if aval.Type().HasDynamicTypes() {
-		eq = aval.RawEquals(bval)
-	} else {
-		eqval := aval.Equals(bval)
-		if !eqval.IsKnown() {
-			eq = aval.RawEquals(bval)
-		} else {
-			eq = eqval.True()
-		}
-	}
-	return eq
-}
-
-//TODO: Refactor this for usage in analyze function (This can be simplified)
-func attributeEquals(a, b *hclsyntax.Attribute) bool {
-	if a == nil && b == nil {
-		return true
-	}
-	if a == nil {
-		if Debug {
-			log.Printf("Attribute %s has been added\n", b.Name)
-		}
-		return false
-	}
-	if b == nil {
-		if Debug {
-			log.Printf("Attribute %s has been removed\n", a.Name)
-		}
-		return false
-	}
-	//By default it is assumed that object are equal unless a change was detected
-	var eq bool = true
-
-	if a.Name != b.Name {
-		if Debug {
-			log.Printf("Attribute names differ: %s != %s\n", a.Name, b.Name)
-		}
-		eq = false
-	}
-	//TODO: Use expressionEquals here
-	av, _ := a.Expr.Value(nil)
-	mv, _ := b.Expr.Value(nil)
-	if av.Type().HasDynamicTypes() {
-		eq = av.RawEquals(mv)
-	} else {
-		eqval := av.Equals(mv)
-		if !eqval.IsKnown() {
-			eq = av.RawEquals(mv)
-		} else {
-			eq = eqval.True()
-		}
-	}
-	return eq
 }

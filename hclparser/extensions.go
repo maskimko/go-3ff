@@ -285,6 +285,7 @@ func (b Blocks) Range() hcl.Range {
 
 func (b Blocks) GetDiffables() *[]diff.Diffable {
 	d := make([]diff.Diffable, b.Len())
+	//TODO: Remove redundant _ here
 	for i, _ := range b {
 		d[i] = b.Get(i)
 	}
