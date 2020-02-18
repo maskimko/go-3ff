@@ -28,11 +28,12 @@ type optionSet struct {
 }
 
 func checkEnv(opts *optionSet) {
-	if _, ok := os.LookupEnv("TFRESDIF_NOPB"); ok {
-		nopb := true
-		opts.nopb = &nopb
-	}
-	if _, ok := os.LookupEnv("TFRESDIF_DEBUG"); ok {
+	//if _, ok := os.LookupEnv("TFRESDIF_NOPB"); ok {
+	//	nopb := true
+	//	opts.nopb = &nopb
+	//}
+	//TODO: use viper library here
+	if _, ok := os.LookupEnv("3FF_DEBUG"); ok {
 		debug := true
 		opts.debug = &debug
 	}
@@ -91,7 +92,7 @@ func parseOptions() *optionSet {
 	o.debug = flag.Bool("d", false, "Enable debug output to StdErr")
 	o.version = flag.Bool("version", false, "Show version info")
 	o.trfout = flag.Bool("t", false, "Output modified resources only (For terraform command)")
-	o.nopb = flag.Bool("nopb", false, "Disable displaying of progress bar")
+	//o.nopb = flag.Bool("nopb", false, "Disable displaying of progress bar")
 	flag.Parse()
 	if *o.version {
 		fmt.Printf("Version: v%s.%s.%s\n", major, minor, revision)

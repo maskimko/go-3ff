@@ -344,7 +344,7 @@ func expressionEquals(a hclsyntax.Expression, b hclsyntax.Expression) bool {
 	return eq
 }
 
-//TODO: refactor this for usage in analyze function (This can be simplified)
+//TODO: Refactor this for usage in analyze function (This can be simplified)
 func attributeEquals(a, b *hclsyntax.Attribute) bool {
 	if a == nil && b == nil {
 		return true
@@ -370,7 +370,7 @@ func attributeEquals(a, b *hclsyntax.Attribute) bool {
 		}
 		eq = false
 	}
-	//TODO: User expressionEquals here
+	//TODO: Use expressionEquals here
 	av, _ := a.Expr.Value(nil)
 	mv, _ := b.Expr.Value(nil)
 	if av.Type().HasDynamicTypes() {

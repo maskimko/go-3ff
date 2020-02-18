@@ -1,6 +1,7 @@
 package hclparser
 
 import (
+	"3ff/diff"
 	"3ff/utils"
 	"fmt"
 	"github.com/fatih/color"
@@ -8,8 +9,6 @@ import (
 	"github.com/hashicorp/hcl2/hcl/hclsyntax"
 	"log"
 	"reflect"
-
-	"3ff/diff"
 	"sort"
 	"strings"
 )
@@ -86,7 +85,6 @@ func (mr *ModifiedResources) analyzeAttributesDiff(orig, modif *Attributes, path
 					ma := modif.Mapped[m[i].DiffParam()]
 					var edchan chan *ExpressionDiff = make(chan *ExpressionDiff)
 					go asyncExpressionDiff(oa.Expr, ma.Expr, edchan)
-					//ed := analyzeExpressionDiff(oa.Expr, ma.Expr)
 					ed := <-edchan
 					if ed.Changed {
 
@@ -122,7 +120,6 @@ func (mr *ModifiedResources) analyzeBlocksDiff(orig, modif Blocks, path []string
 	o := *orig.GetDiffables()
 	m := *modif.GetDiffables()
 	_, lcs := diff.GetLongestCommonSubsequence(&o, &m)
-	//log.Println("Found longest common subsequence:", n)
 	subs := *lcs
 	for i, j, k := 0, 0, 0; j < len(o) || i < len(m); {
 		if j < len(o) {
@@ -224,8 +221,6 @@ func printExpressionContext(indent string, cec ChangedExprContext, p *PrintParam
 		r := cec.Modified.Range()
 		fmt.Printf("%s%s '%s'\t%s\n", indent, p.RemoveColor.Sprintf("-"), cec.ModifDiffVal, formatRange(r, p))
 	} else {
-		//fmt.Printf("%s%s %s %s %s\t%s %s\n", indent, p.ChangedColor.Sprintf("~"), cec.OrigDiffValue,
-		//	color.YellowString("->"), cec.ModifDiffVal,formatRange(or,p),formatRange(mr,p))
 		fmt.Printf("%s%s '%s' %s '%s'\t%s%s%s\n", indent, p.ChangedColor.Sprintf("~"), cec.OrigDiffValue,
 			p.ChangedColor.Sprintf("->"), cec.ModifDiffVal, formatRange(cec.Orig.Range(), p), p.ChangedColor.Sprintf("->"), formatRange(cec.Modified.Range(), p))
 	}
@@ -238,39 +233,10 @@ func formatRange(r hcl.Range, p *PrintParams) string {
 func PrintAttributeContext(atdf *AttributesDiff, p *PrintParams) {
 	for _, v := range atdf.Changes {
 		if v.ModificationType == 0 {
-			//var logString string = ""
-			//var err error
-			//logString, err = utils.GetChangeLogString(v.Orig.Expr.Range(), v.Modif.Expr.Range())
-			//if err != nil && Debug {
-			//	log.Print("Cannot compose attribute diff")
-			//}
-			//if Debug {
-			//	log.Printf("Attribute was changed\n"+
-			//		"Original: %s (in File %s from line %d, column %d till line %d, column %d)\n"+
-			//		"Modified: %s (in File %s from line %d, column %d till line %d, column %d)",
-			//		v.Orig.Name, v.Orig.SrcRange.Filename, v.Orig.Expr.Range().Start.Line, v.Orig.Expr.Range().Start.Column, v.Orig.Expr.Range().End.Line, v.Orig.Expr.Range().End.Column,
-			//		v.Modif.Name, v.Modif.SrcRange.Filename, v.Modif.Expr.Range().Start.Line, v.Modif.Expr.Range().Start.Column, v.Modif.Expr.Range().End.Line, v.Modif.Expr.Range().End.Column)
-			//
-			//}
-			//if logString != "" {
-			//printModifiedAttributeWithDiff(v.Orig.Name, logString, p)
 			printModifiedAttributeWithDeepDiff(v, p)
-			//} else {
-			//	printModifiedAttribute(v.Orig.Name, p)
-			//}
 		} else if v.ModificationType > 0 {
-			//if Debug {
-			//	log.Printf("Attribute was added\n"+
-			//		"Modified: %s (in File %s from line %d, column %d till line %d, column %d)\n",
-			//		v.Modif.Name, v.Modif.SrcRange.Filename, v.Modif.Expr.Range().Start.Line, v.Modif.Expr.Range().Start.Column, v.Modif.Expr.Range().End.Line, v.Modif.Expr.Range().End.Column)
-			//}
 			printAddedAttribute(v.Modif.Name, p)
 		} else {
-			//if Debug {
-			//	log.Printf("Attribute was removed\n"+
-			//		"Original: %s (in File %s from line %d, column %d till line %d, column %d)\n",
-			//		v.Orig.Name, v.Orig.SrcRange.Filename, v.Orig.Expr.Range().Start.Line, v.Orig.Expr.Range().Start.Column, v.Orig.Expr.Range().End.Line, v.Orig.Expr.Range().End.Column)
-			//}
 			printRemovedAttribute(v.Orig.Name, p)
 		}
 	}
@@ -283,14 +249,8 @@ func computeHclSyntaxExpressionsDiff(otce, mtce []hclsyntax.Expression) *Express
 	ed := ExpressionDiff{Changes: make([]ChangedExprContext, 0), Changed: false}
 	otces := NewHclSyntaxExpressions(otce)
 	sort.Sort(otces)
-	//for m, xp := range otces.List {
-	//	log.Printf("\tOriginal attribute expression %d: %s", m, xp)
-	//}
 	mtces := NewHclSyntaxExpressions(mtce)
 	sort.Sort(mtces)
-	//for m, xp := range mtces.List {
-	//	log.Printf("\tModified attribute expressions %d: %s", m, xp)
-	//}
 
 	//TODO: Try to remove this
 	od := otces.GetDiffables()
@@ -303,10 +263,8 @@ func computeHclSyntaxExpressionsDiff(otce, mtce []hclsyntax.Expression) *Express
 			if k < len(subs) && subs[k].DiffParam() == otces.Get(j).DiffParam() {
 				if subs[k].DiffParam() == mtces.Get(i).DiffParam() {
 					//TODO: Use recursion here
-					//r := expressionEquals(otces.Get(j).Contained, mtces.Get(i).Contained)
 					var edchan chan *ExpressionDiff = make(chan *ExpressionDiff)
 					go asyncExpressionDiff(otces.Get(j).Contained, mtces.Get(i).Contained, edchan)
-					//ied := analyzeExpressionDiff(otces.Get(j).Contained, mtces.Get(i).Contained)
 					ied := <-edchan
 					if ied.Changed {
 						ed.Add(ChangedExprContext{Orig: otces.Get(j).Contained, Modified: mtces.Get(i).Contained,
@@ -384,7 +342,6 @@ func asyncExpressionDiff(orig, modif hclsyntax.Expression, diff chan *Expression
 }
 
 func analyzeExpressionDiff(orig, modif hclsyntax.Expression) *ExpressionDiff {
-	//ed := &ExpressionDiff{Changes: make([]ChangedExprContext, 0), Changed: false}
 	if orig == nil && modif == nil {
 		return &ExpressionDiff{Changes: make([]ChangedExprContext, 0)}
 	}
