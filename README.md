@@ -3,6 +3,7 @@
 
 This utility shows modified Terrafrom resources by comparing two files
 Actually this is an open sourced version of Wix's *tfResDiff* tool
+*3ff* reads as _triff_, stands for _TeRraForm difF_ (TRF is substituted by simply 3) 
 
 
 How to build?
