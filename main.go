@@ -1,11 +1,11 @@
 package main
 
 import (
-	"3ff/hclparser"
-	"3ff/utils"
 	"flag"
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/maskimko/go-3ff/hclparser"
+	"github.com/maskimko/go-3ff/utils"
 	"log"
 	"os"
 	"strings"

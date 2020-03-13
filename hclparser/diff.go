@@ -1,12 +1,12 @@
 package hclparser
 
 import (
-	"3ff/diff"
-	"3ff/utils"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/hashicorp/hcl2/hcl"
 	"github.com/hashicorp/hcl2/hcl/hclsyntax"
+	"github.com/maskimko/go-3ff/diff"
+	"github.com/maskimko/go-3ff/utils"
 	"log"
 	"reflect"
 	"sort"

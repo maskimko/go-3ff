@@ -1,12 +1,12 @@
 package hclparser
 
 import (
-	"3ff/utils"
 	"errors"
 	"fmt"
 	"github.com/hashicorp/hcl2/hcl"
 	"github.com/hashicorp/hcl2/hcl/hclsyntax"
 	"github.com/hashicorp/hcl2/hclparse"
+	"github.com/maskimko/go-3ff/utils"
 	"io/ioutil"
 	"log"
 	"os"
