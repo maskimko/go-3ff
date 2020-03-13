@@ -7,7 +7,7 @@
 
 export GO111MODULE=on
 
-NAME := tfResDif
+NAME := 3ff
 MAJOR := $(shell cat VERSION | cut -d. -f 1)
 MINOR := $(shell cat VERSION | cut -d. -f 2)
 REVISION := $(shell cat VERSION | cut -d. -f 3)
