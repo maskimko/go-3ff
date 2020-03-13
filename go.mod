@@ -1,4 +1,4 @@
-module github.com/maskimko/3ff
+module github.com/maskimko/go-3ff
 
 require (
 	github.com/cheggaaa/pb/v3 v3.0.1
