@@ -16,7 +16,7 @@ import (
 )
 
 var Debug bool = false
-var Logger log.Logger
+var Logger *log.Logger
 
 /**
 Compare function performs comparison of 2 files, which it receives as arguments, and returns true if there are no diff

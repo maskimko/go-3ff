@@ -52,9 +52,13 @@ Changelog
 > Initial version, which is a truncated copy of Wix's *3ff* utility version _1.2.10_
 
 *v0.1.4*
-> Can be used publicly. Also this version was tested to use in tfResDif as a library
+> Can be used publicly as a standalone Terraform comparison tool. Also this version was tested to use in tfResDif as a library
 
 *v0.1.5*
+> This version can be used publicly as a standalone tool
+
+
+*v0.1.6*
 > This version can be used publicly in other tools as a library as well as aa standalone tool
  
 

@@ -18,7 +18,7 @@ var Debug bool = false
 var fileMap map[string][]byte = make(map[string][]byte, 0)
 var CacheHits int = 0
 var lock sync.Mutex
-var Logger log.Logger
+var Logger *log.Logger
 
 func GetStringAtPos(start, end int, filename string) (string, error) {
 	if end < start {
