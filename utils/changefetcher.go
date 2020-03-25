@@ -15,9 +15,10 @@ import (
 
 //TODO Use viper.GetBool here
 var Debug bool = false
-var filemap map[string][]byte = make(map[string][]byte, 0)
+var fileMap map[string][]byte = make(map[string][]byte, 0)
 var CacheHits int = 0
 var lock sync.Mutex
+var Logger log.Logger
 
 func GetStringAtPos(start, end int, filename string) (string, error) {
 	if end < start {
@@ -26,19 +27,19 @@ func GetStringAtPos(start, end int, filename string) (string, error) {
 	if start == end {
 		return "", nil
 	}
-	if fd, ok := filemap[filename]; ok {
+	if fd, ok := fileMap[filename]; ok {
 		if Debug {
-			log.Printf("Using cached file %s", filename)
+			Logger.Printf("Using cached file %s", filename)
 		}
 		if start > len(fd) {
 			if Debug {
-				log.Printf("Start %d is after the file length %d", start, len(fd))
+				Logger.Printf("Start %d is after the file length %d", start, len(fd))
 			}
 			return "", errors.New(fmt.Sprintf("Start %d is after the file length %d", start, len(fd)))
 		}
 		if end > len(fd)-1 {
 			if Debug {
-				log.Printf("End %d is after the file length %d", end, len(fd))
+				Logger.Printf("End %d is after the file length %d", end, len(fd))
 			}
 			return "", errors.New(fmt.Sprintf("End %d is after the file length %d", end, len(fd)))
 		}
@@ -55,10 +56,10 @@ func GetStringAtPos(start, end int, filename string) (string, error) {
 	bytes, err := ioutil.ReadAll(file)
 	if err != nil {
 		if Debug {
-			log.Printf("Cannot cache file %s Error: %s", filename, err)
+			Logger.Printf("Cannot cache file %s Error: %s", filename, err)
 		}
 	}
-	filemap[filename] = bytes
+	fileMap[filename] = bytes
 	lock.Unlock()
 	buf := make([]byte, end-start)
 	n, err := file.ReadAt(buf, int64(start))
@@ -67,14 +68,14 @@ func GetStringAtPos(start, end int, filename string) (string, error) {
 		if err == io.EOF {
 			if Debug {
 				if n < end-start {
-					log.Printf("Reached the end of the file %s before expected end of string \"%s\"", filename, s)
+					Logger.Printf("Reached the end of the file %s before expected end of string \"%s\"", filename, s)
 				} else {
-					log.Printf("Reached the end of the file %s while fetching string \"%s\"", filename, s)
+					Logger.Printf("Reached the end of the file %s while fetching string \"%s\"", filename, s)
 				}
 			}
 		} else {
 			if Debug {
-				log.Printf("Cannot read string at given offset range %d-%d from file %s. Error: %s", start, end, filename, err)
+				Logger.Printf("Cannot read string at given offset range %d-%d from file %s. Error: %s", start, end, filename, err)
 			}
 			return "", err
 		}
@@ -90,7 +91,7 @@ func GetStringFromHclSyntaxExpression(e hclsyntax.Expression) string {
 	val, err := GetStringFromRange(r)
 	if err != nil {
 		if Debug {
-			log.Printf("Cannot get string value of expression by range. File %s, (%d:%d - %d:%d)",
+			Logger.Printf("Cannot get string value of expression by range. File %s, (%d:%d - %d:%d)",
 				r.Filename, r.Start.Line, r.Start.Column,
 				r.End.Line, r.End.Column)
 		}
@@ -103,7 +104,7 @@ func GetChangeLogString(orig, modif hcl.Range) (string, error) {
 	origString, err := GetStringFromRange(orig)
 	if err != nil {
 		if Debug {
-			log.Printf("Cannot fetch original string from file %s", orig.Filename)
+			Logger.Printf("Cannot fetch original string from file %s", orig.Filename)
 		}
 		return "", err
 	}
@@ -111,7 +112,7 @@ func GetChangeLogString(orig, modif hcl.Range) (string, error) {
 	modifiedString, err := GetStringFromRange(modif)
 	if err != nil {
 		if Debug {
-			log.Printf("Cannot fetch modified string from file %s", orig.Filename)
+			Logger.Printf("Cannot fetch modified string from file %s", orig.Filename)
 		}
 		return "", err
 	}

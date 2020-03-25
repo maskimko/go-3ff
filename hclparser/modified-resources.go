@@ -12,8 +12,7 @@ func (mr *ModifiedResources) Add(s string) {
 
 func (mr *ModifiedResources) List() *[]string {
 	s := make([]string, 0, len(mr.items))
-	//TODO: Remove redundant _ here
-	for k, _ := range mr.items {
+	for k := range mr.items {
 		s = append(s, k)
 	}
 	return &s
@@ -31,8 +30,7 @@ func (mr *ModifiedResources) AddAuthor(s string) {
 
 func (mr *ModifiedResources) ListAuthors() *[]string {
 	s := make([]string, 0, len(mr.authors))
-	//TODO: Remove redundant _ here
-	for k, _ := range mr.authors {
+	for k := range mr.authors {
 		s = append(s, k)
 	}
 	return &s

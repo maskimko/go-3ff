@@ -16,6 +16,7 @@ import (
 )
 
 var Debug bool = false
+var Logger log.Logger
 
 /**
 Compare function performs comparison of 2 files, which it receives as arguments, and returns true if there are no diff
@@ -41,20 +42,20 @@ func CompareFiles(o, m *os.File) (*ModifiedResources, error) {
 	ofi, err := o.Stat()
 	if err != nil {
 		if Debug {
-			log.Printf("Cannot get File info of %s. Error message: %s", o.Name(), err)
+			Logger.Printf("Cannot get File info of %s. Error message: %s", o.Name(), err)
 		}
 		return nil, err
 	}
 	mfi, err := m.Stat()
 	if err != nil {
 		if Debug {
-			log.Printf("Cannot get File info of %s. Error message: %s", m.Name(), err)
+			Logger.Printf("Cannot get File info of %s. Error message: %s", m.Name(), err)
 		}
 		return nil, err
 	}
 	if ofi.IsDir() != mfi.IsDir() {
 		if Debug {
-			log.Printf("Both files you specified, should be directories, or both should be files\n%s %s", o.Name(), m.Name())
+			Logger.Printf("Both files you specified, should be directories, or both should be files\n%s %s", o.Name(), m.Name())
 		}
 		return nil, errors.New("error: different file types: both files you specified, should be directories, or both should be files")
 	}
@@ -62,7 +63,7 @@ func CompareFiles(o, m *os.File) (*ModifiedResources, error) {
 	origFiles, err := getFilesSlice(o)
 	if err != nil {
 		if Debug {
-			log.Printf("Cannot build files list of the directory %s. Error: %s", ofi.Name(), err)
+			Logger.Printf("Cannot build files list of the directory %s. Error: %s", ofi.Name(), err)
 		}
 		return nil, err
 	}
@@ -72,7 +73,7 @@ func CompareFiles(o, m *os.File) (*ModifiedResources, error) {
 	modifFiles, err := getFilesSlice(m)
 	if err != nil {
 		if Debug {
-			log.Printf("Cannot build files list of the directory %s. Error: %s", mfi.Name(), err)
+			Logger.Printf("Cannot build files list of the directory %s. Error: %s", mfi.Name(), err)
 		}
 		return nil, err
 	}
@@ -82,14 +83,14 @@ func CompareFiles(o, m *os.File) (*ModifiedResources, error) {
 	ohf, err := getHclFiles(origFiles)
 	if err != nil {
 		if Debug {
-			log.Printf("Cannot parse original files. Error %s", err)
+			Logger.Printf("Cannot parse original files. Error %s", err)
 		}
 		return nil, err
 	}
 	mhf, err := getHclFiles(modifFiles)
 	if err != nil {
 		if Debug {
-			log.Printf("Cannot parse modified files %s", err)
+			Logger.Printf("Cannot parse modified files %s", err)
 		}
 		return nil, err
 	}
@@ -108,7 +109,7 @@ func getFilesSlice(root *os.File) (SortableFiles, error) {
 	fileInfo, err := root.Stat()
 	if err != nil {
 		if Debug {
-			log.Printf("Cannot stat File %s", root.Name())
+			Logger.Printf("Cannot stat File %s", root.Name())
 		}
 		return nil, err
 	}
@@ -126,7 +127,7 @@ func getFilesSlice(root *os.File) (SortableFiles, error) {
 				f, err := os.Open(path)
 				if err != nil {
 					if Debug {
-						log.Printf("Cannot open File %s", path)
+						Logger.Printf("Cannot open File %s", path)
 					}
 					return err
 				}
@@ -136,7 +137,7 @@ func getFilesSlice(root *os.File) (SortableFiles, error) {
 		})
 		if err != nil {
 			if Debug {
-				log.Printf("Cannot walk the directory "+
+				Logger.Printf("Cannot walk the directory "+
 					"%s tree. Error: %s", root.Name(), err)
 			}
 			return nil, err
@@ -158,7 +159,7 @@ func getHclFiles(o SortableFiles) ([]*hcl.File, error) {
 		hclFile, diag := parser.ParseHCL(bytes, sf.File.Name())
 		if diag != nil && diag.HasErrors() {
 			for _, err := range diag.Errs() {
-				log.Printf("Cannot parse File %s. Error: %s", sf.File.Name(), err)
+				Logger.Printf("Cannot parse File %s. Error: %s", sf.File.Name(), err)
 				return nil, err
 			}
 		}
@@ -179,7 +180,7 @@ func unpack(hfls []*hcl.File) *Body {
 			if hclb.Attributes[k] != nil {
 				if Debug {
 					//Check for duplicates
-					log.Printf("Cummulative attributes map already contains the value for the key %s", k)
+					Logger.Printf("Cummulative attributes map already contains the value for the key %s", k)
 				}
 			}
 			hclb.Attributes[k] = v
@@ -221,16 +222,16 @@ func (mr *ModifiedResources) computeBlockDiff(o, m *Block, path []string) bool {
 	p := append(path, pChunk)
 	if o.Type != m.Type {
 		if Debug {
-			log.Printf("Block types differ. Path: %s\n"+
+			Logger.Printf("Block types differ. Path: %s\n"+
 				"                    Original: %s (in File %s at line: %d, column: %d)\n"+
 				"                    Modified: %s (in File %s at line: %d, column: %d)", strings.Join(path, "."),
 				o.Type, o.TypeRange.Filename, o.TypeRange.Start.Line, o.TypeRange.Start.Column,
 				m.Type, m.TypeRange.Filename, m.TypeRange.Start.Line, m.TypeRange.Start.Column)
 			logString, err := utils.GetChangeLogString(o.TypeRange, m.TypeRange)
 			if err != nil {
-				log.Print("Cannot compose type diff")
+				Logger.Print("Cannot compose type diff")
 			} else {
-				log.Println(logString)
+				Logger.Println(logString)
 			}
 
 		}
@@ -252,17 +253,17 @@ func (mr *ModifiedResources) computeLabelsDiff(o, m *Block, path []string) bool 
 		if Debug {
 
 			//Basically this case should never happen
-			log.Println("WARNING!!! This should never happen!")
-			log.Printf("Lables quantity differ. Path: %s\n"+
+			Logger.Println("WARNING!!! This should never happen!")
+			Logger.Printf("Lables quantity differ. Path: %s\n"+
 				"                    Original: %d (in File %s)\n"+
 				"                    Modified: %d (in File %s)", strings.Join(path, "/"),
 				len(o.Labels), o.Range().Filename,
 				len(m.Labels), m.Range().Filename)
 			logString, err := utils.GetChangeLogString(o.Range(), m.Range())
 			if err != nil {
-				log.Print("Cannot compose labels quantity diff")
+				Logger.Print("Cannot compose labels quantity diff")
 			} else {
-				log.Println(logString)
+				Logger.Println(logString)
 			}
 		}
 
@@ -271,16 +272,16 @@ func (mr *ModifiedResources) computeLabelsDiff(o, m *Block, path []string) bool 
 	for i, v := range o.Labels {
 		if v != m.Labels[i] {
 			if Debug {
-				log.Printf("Lables  differ. Path: %s\n"+
+				Logger.Printf("Lables  differ. Path: %s\n"+
 					"                    Original: %s (in File %s at line: %d, column: %d)\n"+
 					"                    Modified: %s (in File %s at line: %d, column: %d)", strings.Join(path, "/"),
 					o.Type, o.LabelRanges[i].Filename, o.LabelRanges[i].Start.Line, o.LabelRanges[i].Start.Column,
 					m.Type, m.LabelRanges[i].Filename, m.LabelRanges[i].Start.Line, m.LabelRanges[i].Start.Column)
 				logString, err := utils.GetChangeLogString(o.LabelRanges[i], m.LabelRanges[i])
 				if err != nil {
-					log.Print("Cannot compose label diff")
+					Logger.Print("Cannot compose label diff")
 				} else {
-					log.Println(logString)
+					Logger.Println(logString)
 				}
 			}
 			mr.Add(strings.Join(path, "/"))

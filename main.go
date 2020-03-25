@@ -15,6 +15,7 @@ import (
 var major string
 var minor string
 var revision string
+var Logger *log.Logger
 
 type optionSet struct {
 	version *bool
@@ -44,15 +45,15 @@ func main() {
 	checkEnv(opts)
 	green := color.New(color.FgGreen).SprintFunc()
 	red := color.New(color.FgRed).SprintFunc()
-	//var bar *pb.ProgressBar = nil
+	Logger = log.New(os.Stderr, "", 0)
 	if *opts.debug {
-		log.Printf("Program was been launched with this arguments \"%s\"", strings.Join(os.Args, " "))
+		Logger.Printf("Program was been launched with this arguments \"%s\"", strings.Join(os.Args, " "))
 	}
 	hclparser.Debug = *opts.debug
 	hclparser.TerraformOutput = *opts.trfout
 	var res *hclparser.ModifiedResources
 	if *opts.debug && *opts.trfout {
-		log.Println("Warning! Debug output can spoil terraform output for consumption")
+		Logger.Println("Warning! Debug output can spoil terraform output for consumption")
 	}
 
 	orig, err := os.Open(*opts.s)
@@ -75,15 +76,15 @@ func main() {
 
 	if res.IsEmpty() {
 		if *opts.debug {
-			log.Println(green("OK! No changes"))
+			Logger.Println(green("OK! No changes"))
 		}
 	} else {
 		if *opts.debug {
-			log.Println(red("There are changes"))
+			Logger.Println(red("There are changes"))
 		}
 	}
 	if *opts.debug {
-		log.Printf("File cache hits: %d", utils.CacheHits)
+		Logger.Printf("File cache hits: %d", utils.CacheHits)
 	}
 }
 
@@ -104,7 +105,7 @@ func parseOptions() *optionSet {
 		log.Fatalf("%s You have to specify files or directories for comparison", color.RedString("Error:"))
 	case 1:
 		if *o.debug {
-			log.Println("If you specify only one argument as source directory outside git.go context, the current directory will be treated as a modified file directory")
+			Logger.Println("If you specify only one argument as source directory outside git.go context, the current directory will be treated as a modified file directory")
 		}
 		sd := flag.Arg(0)
 		o.s = &sd
