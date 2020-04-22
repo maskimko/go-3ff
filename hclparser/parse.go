@@ -18,6 +18,12 @@ import (
 var Debug bool = false
 var Logger *log.Logger
 
+const (
+	ResourceKey = "resource"
+	DataKey     = "data"
+	ModuleKey   = "module"
+)
+
 /**
 Compare function performs comparison of 2 files, which it receives as arguments, and returns true if there are no diff
 o stands for original, m stands for modified
@@ -191,6 +197,74 @@ func unpack(hfls []*hcl.File) *Body {
 	}
 	b := Body(hclb)
 	return &b
+}
+func GetTfResourcesByPath(path string) ([]string, error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if Debug {
+			log.Printf("Cannot find file %s Error: %s", path, err)
+		}
+		return nil, err
+	} else {
+		file, err := os.Open(path)
+		if err != nil {
+			if Debug {
+				log.Printf("Cannot open file %s Error: %s", path, err)
+			}
+			return nil, err
+		}
+		return GetTfResources(file)
+	}
+}
+
+func GetTfResources(s *os.File) ([]string, error) {
+	sfi, err := s.Stat()
+	if err != nil {
+		if Debug {
+			Logger.Printf("Cannot get File info of %s. Error message: %s", s.Name(), err)
+		}
+		return nil, err
+	}
+
+	files, err := getFilesSlice(s)
+	if err != nil {
+		if Debug {
+			Logger.Printf("Cannot build files list of the directory %s. Error: %s", sfi.Name(), err)
+		}
+		return nil, err
+	}
+	for _, ofc := range files {
+		defer ofc.File.Close()
+	}
+
+	hf, err := getHclFiles(files)
+	if err != nil {
+		if Debug {
+			Logger.Printf("Cannot parse original files. Error %s", err)
+		}
+		return nil, err
+	}
+	cumulativeBody := unpack(hf)
+	var resources []string
+	if cumulativeBody != nil {
+		for _, b := range cumulativeBody.GetBlocks() {
+			//if strings.HasPrefix(r, "resource") || strings.HasPrefix(r, "module") || strings.HasPrefix(r, "data") {
+			//				fmt.Println(strings.Replace(strings.Split(r, "/")[0], "resource.", "", 1))
+			//			}
+			switch b.Type {
+			case ResourceKey:
+				resources = append(resources, strings.Join(b.Labels, "."))
+			case ModuleKey:
+				resources = append(resources, "module."+strings.Join(b.Labels, "."))
+			case DataKey:
+				resources = append(resources, "data."+strings.Join(b.Labels, "."))
+			default:
+				if Debug {
+					log.Printf("Unsupported type of resource %s", b.Type)
+				}
+			}
+		}
+	}
+	return resources, err
 }
 
 func (mr *ModifiedResources) computeBodyDiff(ob, mb *Body, path []string) bool {
