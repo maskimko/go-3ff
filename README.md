@@ -60,4 +60,5 @@ Changelog
 *v0.1.6*
 > This version can be used publicly in other tools as a library as well as aa standalone tool
  
-
+*0.1.8*
+> Add GetTfResources method which returns all parsed terraform resource names, which can be used as targets in terraform

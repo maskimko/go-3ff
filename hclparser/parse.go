@@ -198,6 +198,8 @@ func unpack(hfls []*hcl.File) *Body {
 	b := Body(hclb)
 	return &b
 }
+
+//This function returns all parsed terraform resource names, which can be used as targets in terraform
 func GetTfResourcesByPath(path string) ([]string, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		if Debug {
@@ -216,6 +218,7 @@ func GetTfResourcesByPath(path string) ([]string, error) {
 	}
 }
 
+//This function returns all parsed terraform resource names, which can be used as targets in terraform
 func GetTfResources(s *os.File) ([]string, error) {
 	sfi, err := s.Stat()
 	if err != nil {
