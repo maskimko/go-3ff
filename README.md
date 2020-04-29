@@ -62,3 +62,6 @@ Changelog
  
 *0.1.8*
 > Add GetTfResources method which returns all parsed terraform resource names, which can be used as targets in terraform
+
+*0.1.9*
+> Add some terraform HCL block resource type support
