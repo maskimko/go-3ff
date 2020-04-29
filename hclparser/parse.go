@@ -18,10 +18,17 @@ import (
 var Debug bool = false
 var Logger *log.Logger
 
+type ResourceType string
+
 const (
-	ResourceKey = "resource"
-	DataKey     = "data"
-	ModuleKey   = "module"
+	ResourceKey    ResourceType = "resource"
+	DataKey        ResourceType = "data"
+	ModuleKey      ResourceType = "module"
+	OutputKey      ResourceType = "output"
+	LabelSeparator              = "."
+	TerraformKey   ResourceType = "terraform"
+	VariableKey    ResourceType = "variable"
+	ProviderKey    ResourceType = "provider"
 )
 
 /**
@@ -254,12 +261,20 @@ func GetTfResources(s *os.File) ([]string, error) {
 			//				fmt.Println(strings.Replace(strings.Split(r, "/")[0], "resource.", "", 1))
 			//			}
 			switch b.Type {
-			case ResourceKey:
-				resources = append(resources, strings.Join(b.Labels, "."))
-			case ModuleKey:
-				resources = append(resources, "module."+strings.Join(b.Labels, "."))
-			case DataKey:
-				resources = append(resources, "data."+strings.Join(b.Labels, "."))
+			case string(ResourceKey):
+				resources = append(resources, strings.Join(b.Labels, LabelSeparator))
+			case string(ModuleKey):
+				resources = append(resources, string(ModuleKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator))
+			case string(DataKey):
+				resources = append(resources, string(DataKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator))
+			case string(OutputKey):
+				resources = append(resources, string(OutputKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator))
+			case string(TerraformKey):
+				//Skip terraform definition
+			case string(VariableKey):
+				resources = append(resources, string(VariableKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator))
+			case string(ProviderKey):
+				//Skip the provider definition
 			default:
 				if Debug {
 					log.Printf("Unsupported type of resource %s", b.Type)
