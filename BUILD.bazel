@@ -1,0 +1,26 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+load("@bazel_gazelle//:def.bzl", "gazelle")
+
+# gazelle:exclude third_party
+# gazelle:prefix github.com/maskimko/go-3ff
+gazelle(
+    name = "gazelle",
+)
+
+go_library(
+    name = "go_default_library",
+    srcs = ["main.go"],
+    importpath = "github.com/maskimko/go-3ff",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//hclparser:go_default_library",
+        "//utils:go_default_library",
+        "@com_github_fatih_color//:go_default_library",
+    ],
+)
+
+go_binary(
+    name = "go-3ff",
+    embed = [":go_default_library"],
+    visibility = ["//visibility:public"],
+)
