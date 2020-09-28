@@ -70,7 +70,7 @@ gazelle:
 bazel-prep: bazel-clean gazelle
 
 bazel-build:
-	bazel build //:go-3ff
+	bazel build --verbose_failures  //:go-3ff
 
 bazel-cleanbuild: bazel-prep bazel-build
 

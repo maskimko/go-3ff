@@ -295,7 +295,7 @@ func (mr *ModifiedResources) computeBodyDiff(ob, mb *Body, path []string) bool {
 	oBlocks := ob.GetBlocks()
 	mBlocks := mb.GetBlocks()
 	printParams := GetDefaultPrintParams()
-	atdf := mr.analyzeAttributesDiff(oAttrs, mAttrs, path, printParams)
+	atdf := mr.analyzeAttributesDiff(oAttrs, mAttrs, path)
 	if atdf.HasChanges() {
 		PrintModified(strings.Join(path, "/"), printParams)
 		printParams.Shift()

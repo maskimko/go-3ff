@@ -4,7 +4,6 @@ go_library(
     name = "go_default_library",
     srcs = [
         "changefetcher.go",
-        "copy.go",
     ],
     importpath = "github.com/maskimko/go-3ff/utils",
     visibility = ["//visibility:public"],

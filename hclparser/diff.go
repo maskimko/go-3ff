@@ -75,8 +75,8 @@ func (atdf *AttributesDiff) Add(ctx ChangedAttributeContext) {
 	atdf.Changes = append(atdf.Changes, ctx)
 }
 
-//TODO: Use PrintParams here
-func (mr *ModifiedResources) analyzeAttributesDiff(orig, modif *Attributes, path []string, p *PrintParams) *AttributesDiff {
+//analyzeAttributesDiff function computes the difference of HCL Attributes by given path and returns AttributesDiff
+func (mr *ModifiedResources) analyzeAttributesDiff(orig, modif *Attributes, path []string) *AttributesDiff {
 	attributesDiff := &AttributesDiff{Changes: make([]ChangedAttributeContext, 0)}
 	if modif.Len() == 0 && orig.Len() == 0 {
 		return attributesDiff
@@ -94,7 +94,7 @@ func (mr *ModifiedResources) analyzeAttributesDiff(orig, modif *Attributes, path
 				if subs[k].DiffParam() == m[i].DiffParam() {
 					oa := orig.Mapped[o[j].DiffParam()]
 					ma := modif.Mapped[m[i].DiffParam()]
-					var edchan chan *ExpressionDiff = make(chan *ExpressionDiff)
+					edchan := make(chan *ExpressionDiff)
 					go asyncExpressionDiff(oa.Expr, ma.Expr, edchan)
 					ed := <-edchan
 					if ed.Changed {
@@ -123,6 +123,7 @@ func (mr *ModifiedResources) analyzeAttributesDiff(orig, modif *Attributes, path
 	return attributesDiff
 }
 
+//analyzeBlocksDiff function computes the difference of HCL Blocks by given path and prints out it using PrintParams formatting
 func (mr *ModifiedResources) analyzeBlocksDiff(orig, modif Blocks, path []string, p *PrintParams) bool {
 
 	result := true
@@ -162,36 +163,42 @@ func (mr *ModifiedResources) analyzeBlocksDiff(orig, modif Blocks, path []string
 	return result
 }
 
+//PrintRemoved function prints out removed diff.Diffable using PrintParams formatting
 func PrintRemoved(mr diff.Diffable, p *PrintParams) {
 	if !TerraformOutput {
 		fmt.Printf("%s%s %s\n", p.GetIndentation(), p.RemoveColor.Sprint("-"), mr.DiffParam())
 	}
 }
 
+//PrintAdded function prints out added diff.Diffable using PrintParams formatting
 func PrintAdded(mr diff.Diffable, p *PrintParams) {
 	if !TerraformOutput {
 		fmt.Printf("%s%s %s\n", p.GetIndentation(), p.AddColor.Sprintf("+"), mr.DiffParam())
 	}
 }
 
+//PrintModified function prints modified string using PrintParams formatting
 func PrintModified(name string, p *PrintParams) {
 	if !TerraformOutput {
 		fmt.Printf("%s%s %s\n", p.GetIndentation(), p.ChangedColor.Sprintf("~"), name)
 	}
 }
 
+//printRemovedAttribute function prints out removed attribute using PrintParams formatting
 func printRemovedAttribute(name string, p *PrintParams) {
 	if !TerraformOutput {
 		fmt.Printf("%s%s [%s]\n", p.GetIndentation(), p.RemoveColor.Sprint("-"), name)
 	}
 }
 
+//printAddedAttribute function prints out added attribute using PrintParams formatting
 func printAddedAttribute(name string, p *PrintParams) {
 	if !TerraformOutput {
 		fmt.Printf("%s%s [%s]\n", p.GetIndentation(), p.ChangedColor.Sprintf("~"), name)
 	}
 }
 
+//printModifiedAttributeWithDeepDiff prints out modifications with a recursive indentation using PrintParams formatting
 func printModifiedAttributeWithDeepDiff(modification ChangedAttributeContext, p *PrintParams) {
 	if !TerraformOutput {
 		name := modification.Orig.Name
@@ -206,6 +213,7 @@ func printModifiedAttributeWithDeepDiff(modification ChangedAttributeContext, p 
 	}
 }
 
+//printExpressionDiff function prints the Expression diff using PrintParams for formatting
 func printExpressionDiff(indent string, ed *ExpressionDiff, p *PrintParams) {
 	if ed == nil {
 		return
@@ -223,6 +231,7 @@ func printExpressionDiff(indent string, ed *ExpressionDiff, p *PrintParams) {
 
 }
 
+//printExpressionContext function prints the Expression diff with a context using PrintParams for formatting
 func printExpressionContext(indent string, cec ChangedExprContext, p *PrintParams) {
 
 	if cec.ModificationType < 0 {
