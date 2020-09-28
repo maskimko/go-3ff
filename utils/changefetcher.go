@@ -13,13 +13,14 @@ import (
 	"sync"
 )
 
-//TODO Use viper.GetBool here
+//Debug var can be set from calling package main
 var Debug bool = false
 var fileMap map[string][]byte = make(map[string][]byte, 0)
 var CacheHits int = 0
 var lock sync.Mutex
 var Logger *log.Logger
 
+//GetStringAtPos function returns a string from the file filename specified by start and the end position
 func GetStringAtPos(start, end int, filename string) (string, error) {
 	if end < start {
 		return "", errors.New("end position cannot be smaller than start position")
@@ -82,10 +83,13 @@ func GetStringAtPos(start, end int, filename string) (string, error) {
 	}
 	return s, nil
 }
+
+//GetStringFromRange function returns string from HCL range object
 func GetStringFromRange(r hcl.Range) (string, error) {
 	return GetStringAtPos(r.Start.Byte, r.End.Byte, r.Filename)
 }
 
+//GetStringFromHclSyntaxExpression function converts HCL Expression to a regular Go string
 func GetStringFromHclSyntaxExpression(e hclsyntax.Expression) string {
 	r := e.Range()
 	val, err := GetStringFromRange(r)
@@ -100,6 +104,7 @@ func GetStringFromHclSyntaxExpression(e hclsyntax.Expression) string {
 	return val
 }
 
+//GetChangeLogString returns formatted string of what modifications were made on HCL range
 func GetChangeLogString(orig, modif hcl.Range) (string, error) {
 	origString, err := GetStringFromRange(orig)
 	if err != nil {

@@ -1,3 +1,5 @@
+//hclparser package contains functions and classes to work with HCL data sctructures
+//as with entities which can be compared in order to compute diff
 package hclparser
 
 import (
@@ -15,6 +17,7 @@ import (
 
 var TerraformOutput bool
 
+//ChangedExprContext holds the details of the change
 type ChangedExprContext struct {
 	//If modificationType is greater than 0 it means that attribute was added
 	//If it is less than 0 it - attribute was removed
@@ -24,12 +27,18 @@ type ChangedExprContext struct {
 	Orig, Modified              hclsyntax.Expression
 	OrigDiffValue, ModifDiffVal string
 }
+
+//ExpressionDiff struct holds the diff data between HCL data objects
 type ExpressionDiff struct {
-	Nested  *ExpressionDiff
+	//ExpressionDiff can nest smaller Nested ones
+	Nested *ExpressionDiff
+	//Changed flag shows the status of HCL data object
 	Changed bool
+	//Changes is an array of ChangedExprContext of this ExpressionDiff
 	Changes []ChangedExprContext
 }
 
+//ChangedAttributeContext struct holds the attribute change details
 type ChangedAttributeContext struct {
 	//If modificationType is greater than 0 it means that attribute was added
 	//If it is less than 0 it - attribute was removed
@@ -232,6 +241,7 @@ func formatRange(r hcl.Range, p *PrintParams) string {
 	return p.LocationColor.Sprintf("@%s[%d:%d-%d:%d]", r.Filename, r.Start.Line, r.Start.Column, r.End.Line, r.End.Column)
 }
 
+//PrintAttributeContext function prints out AttributesDiff using PrintParams formatting
 func PrintAttributeContext(atdf *AttributesDiff, p *PrintParams) {
 	for _, v := range atdf.Changes {
 		if v.ModificationType == 0 {
@@ -244,6 +254,8 @@ func PrintAttributeContext(atdf *AttributesDiff, p *PrintParams) {
 	}
 }
 
+//computeHclSyntaxExpressionsDiff function is implementation of Myers diff algorithm for HCL Expression.
+//This function computes difference and stores values to the ExpressionDiff
 func computeHclSyntaxExpressionsDiff(otce, mtce []hclsyntax.Expression) *ExpressionDiff {
 	ed := ExpressionDiff{Changes: make([]ChangedExprContext, 0), Changed: false}
 	otces := NewHclSyntaxExpressions(otce)
@@ -261,7 +273,6 @@ func computeHclSyntaxExpressionsDiff(otce, mtce []hclsyntax.Expression) *Express
 		if j < otces.Len() {
 			if k < len(subs) && subs[k].DiffParam() == otces.Get(j).DiffParam() {
 				if subs[k].DiffParam() == mtces.Get(i).DiffParam() {
-					//TODO: Use recursion here
 					var edchan chan *ExpressionDiff = make(chan *ExpressionDiff)
 					go asyncExpressionDiff(otces.Get(j).Contained, mtces.Get(i).Contained, edchan)
 					ied := <-edchan
@@ -293,6 +304,7 @@ func computeHclSyntaxExpressionsDiff(otce, mtce []hclsyntax.Expression) *Express
 	return &ed
 }
 
+//computeItemsDiff fucntion is implementaion of Myers diff algorithm for HCL Items
 func computeItemsDiff(o, m []hclsyntax.ObjectConsItem) *ExpressionDiff {
 	ed := ExpressionDiff{Changes: make([]ChangedExprContext, 0), Changed: false}
 	origItems := NewItems(o)
@@ -334,12 +346,14 @@ func computeItemsDiff(o, m []hclsyntax.ObjectConsItem) *ExpressionDiff {
 	return &ed
 }
 
+//asyncExpressionDiff function does the same as analyzeExpressionDiff in asynchronous way and puts values to the diff channel
 func asyncExpressionDiff(orig, modif hclsyntax.Expression, diff chan *ExpressionDiff) {
 	ed := analyzeExpressionDiff(orig, modif)
 	diff <- ed
 	close(diff)
 }
 
+//analyzeExpressionDiff function is implementation of Myers diff algorithm to compute the diff of two HCL expressions
 func analyzeExpressionDiff(orig, modif hclsyntax.Expression) *ExpressionDiff {
 	if orig == nil && modif == nil {
 		return &ExpressionDiff{Changes: make([]ChangedExprContext, 0)}
@@ -454,6 +468,7 @@ func analyzeExpressionDiff(orig, modif hclsyntax.Expression) *ExpressionDiff {
 	return makeFullExpressionDiff(orig, modif)
 }
 
+//makeFullExpressionDiff function computes diff of two Expressions and stores it in ExpressionDiff
 func makeFullExpressionDiff(orig, modif hclsyntax.Expression) *ExpressionDiff {
 	ed := &ExpressionDiff{Changes: make([]ChangedExprContext, 0), Changed: false}
 	origVal := utils.GetStringFromHclSyntaxExpression(orig)
