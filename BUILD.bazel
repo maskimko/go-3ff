@@ -7,6 +7,9 @@ gazelle(
     name = "gazelle",
 )
 
+version = "0.1.10-bazel"
+ver_data = version.split(".")
+
 go_library(
     name = "go_default_library",
     srcs = ["main.go"],
@@ -17,6 +20,11 @@ go_library(
         "//utils:go_default_library",
         "@com_github_fatih_color//:go_default_library",
     ],
+    x_defs = {"example.com/repo/version.Version": "0.9",
+             "main.major": ver_data[0],
+             "main.minor": ver_data[1],
+             "main.revision": ver_data[2]
+             },
 )
 
 go_binary(
