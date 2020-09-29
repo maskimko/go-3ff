@@ -4,6 +4,7 @@ import (
 	"github.com/fatih/color"
 )
 
+//PrintParams class holds the knowledge of formatting the output
 type PrintParams struct {
 	RemoveColor   *color.Color
 	AddColor      *color.Color
@@ -15,10 +16,12 @@ type PrintParams struct {
 	indentUnit    string
 }
 
+//Shift function increases indentation of the PrintParams
 func (p *PrintParams) Shift() {
 	p.Indent++
 }
 
+//Unshift function decreases indentation of the PrintParams
 func (p *PrintParams) Unshift() {
 	p.Indent--
 	//Do not allow negative indent
@@ -27,6 +30,7 @@ func (p *PrintParams) Unshift() {
 	}
 }
 
+//GetIndentation function returns the indentation size value
 func (p *PrintParams) GetIndentation() string {
 	var ins string = ""
 	for i := 0; i < p.Indent; i++ {
@@ -35,6 +39,7 @@ func (p *PrintParams) GetIndentation() string {
 	return ins
 }
 
+//GetDefaultPrintParams return the default formatting style
 func GetDefaultPrintParams() *PrintParams {
 	pp := PrintParams{
 		RemoveColor:   color.New(color.FgRed),

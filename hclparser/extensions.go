@@ -38,6 +38,7 @@ type SortableFile struct {
 	File *os.File
 }
 
+//ConvertExpressionsHcl2HclS function converts public interface hcl defined data to the HCL internal data structure
 func ConvertExpressionsHcl2HclS(in []hcl.Expression) []hclsyntax.Expression {
 	elist := make([]hclsyntax.Expression, len(in), len(in))
 	for i, v := range in {
@@ -46,6 +47,7 @@ func ConvertExpressionsHcl2HclS(in []hcl.Expression) []hclsyntax.Expression {
 	return elist
 }
 
+//NewHclSyntaxExpressions function returns a container of Expressions from hcl private data structures
 func NewHclSyntaxExpressions(expressions []hclsyntax.Expression) *Expressions {
 	elist := make([]Expression, len(expressions))
 	i := 0
@@ -55,9 +57,12 @@ func NewHclSyntaxExpressions(expressions []hclsyntax.Expression) *Expressions {
 	}
 	return &Expressions{List: elist}
 }
+
+//NewHclExpressions function returns a container of Expressions from hcl public data structures
 func NewHclExpressions(expressions []hcl.Expression) *Expressions {
 	return NewHclSyntaxExpressions(ConvertExpressionsHcl2HclS(expressions))
 }
+
 func NewItems(items []hclsyntax.ObjectConsItem) *Items {
 	l := make([]Item, len(items))
 	for i, v := range items {
@@ -79,17 +84,9 @@ func (b Block) DiffParam() string {
 	return fmt.Sprintf("%s.%s", b.Type, strings.Join(b.Labels, "."))
 }
 
-//func (b Block) DiffRepresentation() string {
-//	return "Not implemented yet"
-//}
-
 func (a Attribute) DiffParam() string {
 	return a.Name
 }
-
-//func (a Attribute) DiffRepresentation() string {
-//	return "Not implemented yet"
-//}
 
 func (a Attribute) Range() hcl.Range {
 	return a.NameRange
@@ -145,9 +142,13 @@ func (e *Expressions) Get(i int) *Expression {
 func (items *Items) Get(i int) *Item {
 	return &items.List[i]
 }
+
+//DiffParam method returns a string representation of the Item to be able to perform simple comparison and compute a difference
 func (i *Item) DiffParam() string {
 	return (&Expression{Contained: i.Contained.KeyExpr}).DiffParam()
 }
+
+//DiffParam method returns a string representation of the Expression to be able to perform simple comparison and compute a difference
 func (e *Expression) DiffParam() string {
 	if te, ok := e.Contained.(*hclsyntax.TemplateExpr); ok {
 		var tvals []string
@@ -285,8 +286,7 @@ func (b Blocks) Range() hcl.Range {
 
 func (b Blocks) GetDiffables() *[]diff.Diffable {
 	d := make([]diff.Diffable, b.Len())
-	//TODO: Remove redundant _ here
-	for i, _ := range b {
+	for i := range b {
 		d[i] = b.Get(i)
 	}
 	return &d
@@ -327,7 +327,3 @@ func (sf SortableFiles) Len() int {
 func (sf SortableFile) DiffParam() string {
 	return sf.File.Name()
 }
-
-//func (sf SortableFile) DiffRepresentation() string {
-//	return "Not implemented yet"
-//}

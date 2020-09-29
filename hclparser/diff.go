@@ -1,3 +1,5 @@
+//hclparser package contains functions and classes to work with HCL data sctructures
+//as with entities which can be compared in order to compute diff
 package hclparser
 
 import (
@@ -15,6 +17,7 @@ import (
 
 var TerraformOutput bool
 
+//ChangedExprContext holds the details of the change
 type ChangedExprContext struct {
 	//If modificationType is greater than 0 it means that attribute was added
 	//If it is less than 0 it - attribute was removed
@@ -24,12 +27,18 @@ type ChangedExprContext struct {
 	Orig, Modified              hclsyntax.Expression
 	OrigDiffValue, ModifDiffVal string
 }
+
+//ExpressionDiff struct holds the diff data between HCL data objects
 type ExpressionDiff struct {
-	Nested  *ExpressionDiff
+	//ExpressionDiff can nest smaller Nested ones
+	Nested *ExpressionDiff
+	//Changed flag shows the status of HCL data object
 	Changed bool
+	//Changes is an array of ChangedExprContext of this ExpressionDiff
 	Changes []ChangedExprContext
 }
 
+//ChangedAttributeContext struct holds the attribute change details
 type ChangedAttributeContext struct {
 	//If modificationType is greater than 0 it means that attribute was added
 	//If it is less than 0 it - attribute was removed
@@ -66,8 +75,8 @@ func (atdf *AttributesDiff) Add(ctx ChangedAttributeContext) {
 	atdf.Changes = append(atdf.Changes, ctx)
 }
 
-//TODO: Use PrintParams here
-func (mr *ModifiedResources) analyzeAttributesDiff(orig, modif *Attributes, path []string, p *PrintParams) *AttributesDiff {
+//analyzeAttributesDiff function computes the difference of HCL Attributes by given path and returns AttributesDiff
+func (mr *ModifiedResources) analyzeAttributesDiff(orig, modif *Attributes, path []string) *AttributesDiff {
 	attributesDiff := &AttributesDiff{Changes: make([]ChangedAttributeContext, 0)}
 	if modif.Len() == 0 && orig.Len() == 0 {
 		return attributesDiff
@@ -85,7 +94,7 @@ func (mr *ModifiedResources) analyzeAttributesDiff(orig, modif *Attributes, path
 				if subs[k].DiffParam() == m[i].DiffParam() {
 					oa := orig.Mapped[o[j].DiffParam()]
 					ma := modif.Mapped[m[i].DiffParam()]
-					var edchan chan *ExpressionDiff = make(chan *ExpressionDiff)
+					edchan := make(chan *ExpressionDiff)
 					go asyncExpressionDiff(oa.Expr, ma.Expr, edchan)
 					ed := <-edchan
 					if ed.Changed {
@@ -114,6 +123,7 @@ func (mr *ModifiedResources) analyzeAttributesDiff(orig, modif *Attributes, path
 	return attributesDiff
 }
 
+//analyzeBlocksDiff function computes the difference of HCL Blocks by given path and prints out it using PrintParams formatting
 func (mr *ModifiedResources) analyzeBlocksDiff(orig, modif Blocks, path []string, p *PrintParams) bool {
 
 	result := true
@@ -153,36 +163,42 @@ func (mr *ModifiedResources) analyzeBlocksDiff(orig, modif Blocks, path []string
 	return result
 }
 
+//PrintRemoved function prints out removed diff.Diffable using PrintParams formatting
 func PrintRemoved(mr diff.Diffable, p *PrintParams) {
 	if !TerraformOutput {
 		fmt.Printf("%s%s %s\n", p.GetIndentation(), p.RemoveColor.Sprint("-"), mr.DiffParam())
 	}
 }
 
+//PrintAdded function prints out added diff.Diffable using PrintParams formatting
 func PrintAdded(mr diff.Diffable, p *PrintParams) {
 	if !TerraformOutput {
 		fmt.Printf("%s%s %s\n", p.GetIndentation(), p.AddColor.Sprintf("+"), mr.DiffParam())
 	}
 }
 
+//PrintModified function prints modified string using PrintParams formatting
 func PrintModified(name string, p *PrintParams) {
 	if !TerraformOutput {
 		fmt.Printf("%s%s %s\n", p.GetIndentation(), p.ChangedColor.Sprintf("~"), name)
 	}
 }
 
+//printRemovedAttribute function prints out removed attribute using PrintParams formatting
 func printRemovedAttribute(name string, p *PrintParams) {
 	if !TerraformOutput {
 		fmt.Printf("%s%s [%s]\n", p.GetIndentation(), p.RemoveColor.Sprint("-"), name)
 	}
 }
 
+//printAddedAttribute function prints out added attribute using PrintParams formatting
 func printAddedAttribute(name string, p *PrintParams) {
 	if !TerraformOutput {
 		fmt.Printf("%s%s [%s]\n", p.GetIndentation(), p.ChangedColor.Sprintf("~"), name)
 	}
 }
 
+//printModifiedAttributeWithDeepDiff prints out modifications with a recursive indentation using PrintParams formatting
 func printModifiedAttributeWithDeepDiff(modification ChangedAttributeContext, p *PrintParams) {
 	if !TerraformOutput {
 		name := modification.Orig.Name
@@ -197,6 +213,7 @@ func printModifiedAttributeWithDeepDiff(modification ChangedAttributeContext, p 
 	}
 }
 
+//printExpressionDiff function prints the Expression diff using PrintParams for formatting
 func printExpressionDiff(indent string, ed *ExpressionDiff, p *PrintParams) {
 	if ed == nil {
 		return
@@ -214,6 +231,7 @@ func printExpressionDiff(indent string, ed *ExpressionDiff, p *PrintParams) {
 
 }
 
+//printExpressionContext function prints the Expression diff with a context using PrintParams for formatting
 func printExpressionContext(indent string, cec ChangedExprContext, p *PrintParams) {
 
 	if cec.ModificationType < 0 {
@@ -232,6 +250,7 @@ func formatRange(r hcl.Range, p *PrintParams) string {
 	return p.LocationColor.Sprintf("@%s[%d:%d-%d:%d]", r.Filename, r.Start.Line, r.Start.Column, r.End.Line, r.End.Column)
 }
 
+//PrintAttributeContext function prints out AttributesDiff using PrintParams formatting
 func PrintAttributeContext(atdf *AttributesDiff, p *PrintParams) {
 	for _, v := range atdf.Changes {
 		if v.ModificationType == 0 {
@@ -244,6 +263,8 @@ func PrintAttributeContext(atdf *AttributesDiff, p *PrintParams) {
 	}
 }
 
+//computeHclSyntaxExpressionsDiff function is implementation of Myers diff algorithm for HCL Expression.
+//This function computes difference and stores values to the ExpressionDiff
 func computeHclSyntaxExpressionsDiff(otce, mtce []hclsyntax.Expression) *ExpressionDiff {
 	ed := ExpressionDiff{Changes: make([]ChangedExprContext, 0), Changed: false}
 	otces := NewHclSyntaxExpressions(otce)
@@ -261,7 +282,6 @@ func computeHclSyntaxExpressionsDiff(otce, mtce []hclsyntax.Expression) *Express
 		if j < otces.Len() {
 			if k < len(subs) && subs[k].DiffParam() == otces.Get(j).DiffParam() {
 				if subs[k].DiffParam() == mtces.Get(i).DiffParam() {
-					//TODO: Use recursion here
 					var edchan chan *ExpressionDiff = make(chan *ExpressionDiff)
 					go asyncExpressionDiff(otces.Get(j).Contained, mtces.Get(i).Contained, edchan)
 					ied := <-edchan
@@ -293,6 +313,7 @@ func computeHclSyntaxExpressionsDiff(otce, mtce []hclsyntax.Expression) *Express
 	return &ed
 }
 
+//computeItemsDiff fucntion is implementaion of Myers diff algorithm for HCL Items
 func computeItemsDiff(o, m []hclsyntax.ObjectConsItem) *ExpressionDiff {
 	ed := ExpressionDiff{Changes: make([]ChangedExprContext, 0), Changed: false}
 	origItems := NewItems(o)
@@ -334,12 +355,14 @@ func computeItemsDiff(o, m []hclsyntax.ObjectConsItem) *ExpressionDiff {
 	return &ed
 }
 
+//asyncExpressionDiff function does the same as analyzeExpressionDiff in asynchronous way and puts values to the diff channel
 func asyncExpressionDiff(orig, modif hclsyntax.Expression, diff chan *ExpressionDiff) {
 	ed := analyzeExpressionDiff(orig, modif)
 	diff <- ed
 	close(diff)
 }
 
+//analyzeExpressionDiff function is implementation of Myers diff algorithm to compute the diff of two HCL expressions
 func analyzeExpressionDiff(orig, modif hclsyntax.Expression) *ExpressionDiff {
 	if orig == nil && modif == nil {
 		return &ExpressionDiff{Changes: make([]ChangedExprContext, 0)}
@@ -454,6 +477,7 @@ func analyzeExpressionDiff(orig, modif hclsyntax.Expression) *ExpressionDiff {
 	return makeFullExpressionDiff(orig, modif)
 }
 
+//makeFullExpressionDiff function computes diff of two Expressions and stores it in ExpressionDiff
 func makeFullExpressionDiff(orig, modif hclsyntax.Expression) *ExpressionDiff {
 	ed := &ExpressionDiff{Changes: make([]ChangedExprContext, 0), Changed: false}
 	origVal := utils.GetStringFromHclSyntaxExpression(orig)
