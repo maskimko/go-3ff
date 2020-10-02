@@ -7,7 +7,7 @@ gazelle(
     name = "gazelle",
 )
 
-version = "0.1.10-bazel"
+version = "0.1.11"
 ver_data = version.split(".")
 
 go_library(
