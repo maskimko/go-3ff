@@ -66,5 +66,5 @@ Changelog
 *0.1.9*
 > Add some terraform HCL block resource type support
 
-*0.1.10*
+*0.1.12*
 > Can return resource count
