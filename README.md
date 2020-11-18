@@ -74,3 +74,6 @@ Changelog
 
 *0.1.14*
 > Use of getCount for all known HCL resource types
+
+*0.1.15*
+> Remove "processing block" spam message in debug mode
