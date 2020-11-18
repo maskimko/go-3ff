@@ -328,7 +328,7 @@ func getCount(b *hclsyntax.Block) int {
 			}
 		}
 	}
-	return 1
+	return -1
 }
 
 func addResource(b *hclsyntax.Block, resources map[string]int) {
@@ -339,18 +339,18 @@ func addResource(b *hclsyntax.Block, resources map[string]int) {
 		resources[strings.Join(b.Labels, LabelSeparator)] = getCount(b)
 	case string(ModuleKey):
 		//resources = append(resources, string(ModuleKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator))
-		resources[string(ModuleKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator)] = 1
+		resources[string(ModuleKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator)] = getCount(b)
 	case string(DataKey):
 		//resources = append(resources, string(DataKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator))
-		resources[string(DataKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator)] = 1
+		resources[string(DataKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator)] = getCount(b)
 	case string(OutputKey):
 		//resources = append(resources, string(OutputKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator))
-		resources[string(DataKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator)] = 1
+		resources[string(DataKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator)] = getCount(b)
 	case string(TerraformKey):
 		//Skip terraform definition
 	case string(VariableKey):
 		//resources = append(resources, string(VariableKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator))
-		resources[string(VariableKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator)] = 1
+		resources[string(VariableKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator)] = getCount(b)
 	case string(ProviderKey):
 		//Skip the provider definition
 	default:

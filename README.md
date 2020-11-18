@@ -71,3 +71,6 @@ Changelog
 
 *0.1.13*
 > Introduced GetTfResourcesCountByPath function
+
+*0.1.14*
+> Use of getCount for all known HCL resource types
