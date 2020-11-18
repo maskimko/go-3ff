@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -229,7 +230,7 @@ func GetTfResourcesByPath(path string) ([]string, error) {
 }
 
 //GetTfResources function returns all parsed terraform resource names, which can be used as targets in terraform
-func GetTfResources(s *os.File) ([]string, error) {
+func GetTfResourcesCount(s *os.File) (map[string]int, error) {
 	sfi, err := s.Stat()
 	if err != nil {
 		if Debug {
@@ -237,7 +238,6 @@ func GetTfResources(s *os.File) ([]string, error) {
 		}
 		return nil, err
 	}
-
 	files, err := getFilesSlice(s)
 	if err != nil {
 		if Debug {
@@ -257,35 +257,100 @@ func GetTfResources(s *os.File) ([]string, error) {
 		return nil, err
 	}
 	cumulativeBody := unpack(hf)
-	var resources []string
+	var resources = make(map[string]int)
 	if cumulativeBody != nil {
-		for _, b := range cumulativeBody.GetBlocks() {
-			//if strings.HasPrefix(r, "resource") || strings.HasPrefix(r, "module") || strings.HasPrefix(r, "data") {
-			//				fmt.Println(strings.Replace(strings.Split(r, "/")[0], "resource.", "", 1))
-			//			}
-			switch b.Type {
-			case string(ResourceKey):
-				resources = append(resources, strings.Join(b.Labels, LabelSeparator))
-			case string(ModuleKey):
-				resources = append(resources, string(ModuleKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator))
-			case string(DataKey):
-				resources = append(resources, string(DataKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator))
-			case string(OutputKey):
-				resources = append(resources, string(OutputKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator))
-			case string(TerraformKey):
-				//Skip terraform definition
-			case string(VariableKey):
-				resources = append(resources, string(VariableKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator))
-			case string(ProviderKey):
-				//Skip the provider definition
-			default:
-				if Debug {
-					log.Printf("Unsupported type of resource %s", b.Type)
-				}
+		for n, b := range cumulativeBody.GetBlocks() {
+			if Debug {
+				log.Printf("===processing block #%d===", n)
 			}
+			addResource(b, resources)
 		}
 	}
 	return resources, err
+}
+
+func getCount(b *hclsyntax.Block) int {
+	attributes := b.Body.Attributes
+	//attrMap := attributes.(map[string]*hclsyntax.Attribute)
+	for k, v := range attributes {
+		if k == "count" {
+			val, d := v.Expr.Value(nil)
+			if Debug && d != nil && d.HasErrors() {
+				log.Printf(d.Error())
+			}
+			if val.IsWhollyKnown() && val.Type().IsPrimitiveType() {
+				switch val.Type().GoString() {
+				case "cty.String":
+					i, err := strconv.Atoi(val.AsString())
+					if err != nil {
+						if Debug {
+							log.Printf("failed to convert %s to integer", val.AsString())
+						}
+						return -1
+					}
+					return i
+				case "cty.Number":
+					bf := val.AsBigFloat()
+					if bf.IsInt() {
+						bi, _ := bf.Int(nil)
+						i := int(bi.Int64())
+						return i
+					} else {
+						return -1
+					}
+				default:
+					if Debug {
+						log.Printf("got invlid count value at %s line %d col %d", v.Expr.Range().Filename,
+							v.Expr.Range().Start.Line, v.Expr.Range().Start.Column)
+					}
+					return -1
+				}
+
+			}
+		}
+	}
+	return 1
+}
+
+func addResource(b *hclsyntax.Block, resources map[string]int) {
+	switch b.Type {
+	case string(ResourceKey):
+		//resources = append(resources, strings.Join(b.Labels, LabelSeparator))
+
+		resources[strings.Join(b.Labels, LabelSeparator)] = getCount(b)
+	case string(ModuleKey):
+		//resources = append(resources, string(ModuleKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator))
+		resources[string(ModuleKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator)] = 1
+	case string(DataKey):
+		//resources = append(resources, string(DataKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator))
+		resources[string(DataKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator)] = 1
+	case string(OutputKey):
+		//resources = append(resources, string(OutputKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator))
+		resources[string(DataKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator)] = 1
+	case string(TerraformKey):
+		//Skip terraform definition
+	case string(VariableKey):
+		//resources = append(resources, string(VariableKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator))
+		resources[string(VariableKey)+LabelSeparator+strings.Join(b.Labels, LabelSeparator)] = 1
+	case string(ProviderKey):
+		//Skip the provider definition
+	default:
+		if Debug {
+			log.Printf("Unsupported type of resource %s", b.Type)
+		}
+	}
+}
+
+func GetTfResources(s *os.File) ([]string, error) {
+	var resources []string
+	count, err := GetTfResourcesCount(s)
+	if err != nil {
+		return nil, err
+	}
+	for k, _ := range count {
+		resources = append(resources, k)
+	}
+	return resources, nil
 }
 
 //computeBodyDiff function computes diff of two HCL bodies and prints computed data

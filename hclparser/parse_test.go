@@ -17,7 +17,7 @@ func TestGetTfResourcesByPath(t *testing.T) {
 		// TODO: Add test cases.
 		{name: "Smoke test",
 			args: args{
-				path: "/home/maskimko/Work/Wix/Terraform/rg/generator/output/42",
+				path: "/home/maskimko/Wix/Terraform/rg/generator/output/42",
 			},
 			wantErr: false},
 	}
