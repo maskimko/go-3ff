@@ -278,10 +278,7 @@ func GetTfResourcesCount(s *os.File) (map[string]int, error) {
 	cumulativeBody := unpack(hf)
 	var resources = make(map[string]int)
 	if cumulativeBody != nil {
-		for n, b := range cumulativeBody.GetBlocks() {
-			if Debug {
-				log.Printf("===processing block #%d===", n)
-			}
+		for _, b := range cumulativeBody.GetBlocks() {
 			addResource(b, resources)
 		}
 	}
