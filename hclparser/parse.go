@@ -229,7 +229,26 @@ func GetTfResourcesByPath(path string) ([]string, error) {
 	}
 }
 
-//GetTfResources function returns all parsed terraform resource names, which can be used as targets in terraform
+//GetTfResourcesCountByPath function returns all parsed terraform resource names, which can be used as targets in terraform
+func GetTfResourcesCountByPath(path string) (map[string]int, error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if Debug {
+			log.Printf("Cannot find file %s Error: %s", path, err)
+		}
+		return nil, err
+	} else {
+		file, err := os.Open(path)
+		if err != nil {
+			if Debug {
+				log.Printf("Cannot open file %s Error: %s", path, err)
+			}
+			return nil, err
+		}
+		return GetTfResourcesCount(file)
+	}
+}
+
+//GetTfResourcesCount function returns all parsed terraform resource names with its count values, which can be used as targets in terraform
 func GetTfResourcesCount(s *os.File) (map[string]int, error) {
 	sfi, err := s.Stat()
 	if err != nil {

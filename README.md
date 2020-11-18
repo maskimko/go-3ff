@@ -68,3 +68,6 @@ Changelog
 
 *0.1.12*
 > Can return resource count
+
+*0.1.13*
+> Introduced GetTfResourcesCountByPath function
