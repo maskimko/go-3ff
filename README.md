@@ -1,5 +1,9 @@
 3ff
 ========
+[![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![GoDoc](http://img.shields.io/badge/GoDoc-Reference-blue.svg)](https://pkg.go.dev/github.com/maskimko/go-3ff)
+[![Go Report Card](https://goreportcard.com/report/github.com/maskimko/go-3ff)](https://goreportcard.com/report/github.com/maskimko/go-3ff)
+[![codecov](https://codecov.io/gh/maskimko/go-3ff/branch/master/graph/badge.svg)](https://app.codecov.io/gh/maskimko/go-3ff)
 
 This utility shows modified Terrafrom resources by comparing two files
 Actually this is an open sourced version of Wix's *tfResDiff* tool

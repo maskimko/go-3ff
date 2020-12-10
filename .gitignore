@@ -10,3 +10,4 @@ bazel-3ff
 bazel-bin
 bazel-out
 bazel-testlogs
+/coverage.txt
