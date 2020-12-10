@@ -75,3 +75,7 @@ bazel-build:
 bazel-cleanbuild: bazel-prep bazel-build
 
 bazel-build-from-scratch: bazel-purge gazelle bazel-build
+
+.PHONY: test-cov
+test-cov:
+	$(shell ./test_coverage.sh)
