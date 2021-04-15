@@ -11,8 +11,7 @@ func main() {
 	if len(os.Args) != 3 {
 		log.Fatalf("Usage: %s <pattern> <.tf file or dir>", os.Args[0])
 	}
-	query := fmt.Sprintf("resource.%s", os.Args[1])
-	grep, err := cmd.TFGrep(os.Args[2], query)
+	grep, err := cmd.TFGrep(os.Args[2], os.Args[1])
 	if err != nil {
 		log.Fatal(err.Error())
 	}
