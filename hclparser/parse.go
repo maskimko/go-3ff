@@ -250,6 +250,20 @@ func GetTfResourcesCountByPath(path string) (map[string]int, error) {
 
 //GetTfResourcesCount function returns all parsed terraform resource names with its count values, which can be used as targets in terraform
 func GetTfResourcesCount(s *os.File) (map[string]int, error) {
+	cumulativeBody, err := GetCumulativeBody(s)
+	if err != nil {
+		return nil, err
+	}
+	var resources = make(map[string]int)
+	if cumulativeBody != nil {
+		for _, b := range cumulativeBody.GetBlocks() {
+			addResource(b, resources)
+		}
+	}
+	return resources, err
+}
+
+func GetCumulativeBody(s *os.File) (*Body, error) {
 	sfi, err := s.Stat()
 	if err != nil {
 		if Debug {
@@ -276,13 +290,7 @@ func GetTfResourcesCount(s *os.File) (map[string]int, error) {
 		return nil, err
 	}
 	cumulativeBody := unpack(hf)
-	var resources = make(map[string]int)
-	if cumulativeBody != nil {
-		for _, b := range cumulativeBody.GetBlocks() {
-			addResource(b, resources)
-		}
-	}
-	return resources, err
+	return cumulativeBody, nil
 }
 
 func getCount(b *hclsyntax.Block) int {

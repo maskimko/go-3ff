@@ -48,7 +48,15 @@ Environment variables
 
 *3ff_DEBUG* - Enables debug output (Like _-d_ flag)
 
+tfgrep
+------
 
+tfgrep utility acts like a regular grep but for .tf files. 
+It extracts the resource body by the given resource name pattern from terraform file, 
+or a directory with terraform files
+
+_Example_
+`$ ./tfgrep aws_instance instances.tf`
 
 Changelog
 ---------
@@ -81,3 +89,6 @@ Changelog
 
 *0.1.15*
 > Remove "processing block" spam message in debug mode
+
+*0.1.16*
+> Support of tfgrep

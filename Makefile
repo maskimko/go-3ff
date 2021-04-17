@@ -79,3 +79,9 @@ bazel-build-from-scratch: bazel-purge gazelle bazel-build
 .PHONY: test-cov
 test-cov:
 	$(shell ./test_coverage.sh)
+
+.PHONY: build-tfgrep
+build-tfgrep:
+	@echo -e '\033[0;33mBuilding...\033[0m'
+	go build -v -o ./bin/tfgrep -ldflags '${LDFLAGS}' tfgrep.go
+	@echo -e '\033[0;32mDONE!\033[0m'
