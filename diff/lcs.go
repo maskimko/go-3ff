@@ -1,5 +1,7 @@
 package diff
 
+//GetLongestCommonSubsequenceLength function return the length of the longest common subsequence of 2 sets
+//For example 'abd' and 'acd' has common subsequence 'ad' which length is 2
 func GetLongestCommonSubsequenceLength(n, m *[]Diffable) uint32 {
 	a := *n
 	b := *m
@@ -7,8 +9,7 @@ func GetLongestCommonSubsequenceLength(n, m *[]Diffable) uint32 {
 		return 0
 	}
 	matrix := make([][]uint32, len(a)+1)
-	for i, _ := range matrix {
-		//TODO: Remove redundant _ here
+	for i := range matrix {
 		matrix[i] = make([]uint32, len(b)+1)
 	}
 	for i := 0; i <= len(b); i++ {
@@ -38,6 +39,8 @@ func max(x, y uint32) uint32 {
 	}
 }
 
+//GetLongestCommonSubsequence function return the longest common subsequence of 2 sets
+//For example 'abd' and 'acd' has common subsequence 'ad'
 func GetLongestCommonSubsequence(one, other *[]Diffable) (uint32, *[]Diffable) {
 	a := *one
 	b := *other
@@ -45,8 +48,7 @@ func GetLongestCommonSubsequence(one, other *[]Diffable) (uint32, *[]Diffable) {
 		return 0, &[]Diffable{}
 	}
 	matrix := make([][]uint32, len(a)+1)
-	//TODO: Remove redundant _ here
-	for i, _ := range matrix {
+	for i := range matrix {
 		matrix[i] = make([]uint32, len(b)+1)
 	}
 	for i := 0; i <= len(b); i++ {

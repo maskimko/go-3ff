@@ -22,23 +22,23 @@ LDFLAGS := \
 
 default: build
 
-clean:
+old-clean:
 	@echo -e '\033[0;33mCleaning up...\033[0m'
 	@rm dist/* -rf
 	@rm bin/* -rf
 	@echo -e '\033[0;32mDONE!\033[0m'
 
-build:
+old-build:
 	@echo -e '\033[0;33mBuilding...\033[0m'
 	go build -v -o ./bin/$(NAME) -ldflags '${LDFLAGS}' .
 	@echo -e '\033[0;32mDONE!\033[0m'
 
-build-static:
+old-build-static:
 	@echo -e '\033[0;33mBuilding...\033[0m'
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -o ./bin/$(NAME) -ldflags '-s -w --extldflags "-static" ${LDFLAGS}' .
 	@echo -e '\033[0;32mDONE!\033[0m'
 
-dist:
+old-dist:
 	@# For linux 386 when building on linux amd64 you'll need 'libc6-dev-i386' package
 	@echo -e '\033[0;33mBuilding dist\033[0m'
 
@@ -58,3 +58,30 @@ dist:
 	@echo -e '\033[0;32mDONE!\033[0m'
 
 
+bazel-purge:
+	bazel clean --expunge
+
+bazel-clean:
+	bazel clean
+
+gazelle:
+	bazel run //:gazelle -- update-repos -from_file=go.mod -to_macro=third_party.bzl%third_party_dependencies
+
+bazel-prep: bazel-clean gazelle
+
+bazel-build:
+	bazel build --verbose_failures  //:go-3ff
+
+bazel-cleanbuild: bazel-prep bazel-build
+
+bazel-build-from-scratch: bazel-purge gazelle bazel-build
+
+.PHONY: test-cov
+test-cov:
+	$(shell ./test_coverage.sh)
+
+.PHONY: build-tfgrep
+build-tfgrep:
+	@echo -e '\033[0;33mBuilding...\033[0m'
+	go build -v -o ./bin/tfgrep -ldflags '${LDFLAGS}' tfgrep.go
+	@echo -e '\033[0;32mDONE!\033[0m'

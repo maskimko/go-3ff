@@ -1,5 +1,9 @@
 3ff
 ========
+[![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![GoDoc](http://img.shields.io/badge/GoDoc-Reference-blue.svg)](https://pkg.go.dev/github.com/maskimko/go-3ff)
+[![Go Report Card](https://goreportcard.com/badge/github.com/maskimko/go-3ff)](https://goreportcard.com/report/github.com/maskimko/go-3ff)
+[![codecov](https://codecov.io/gh/maskimko/go-3ff/branch/master/graph/badge.svg)](https://app.codecov.io/gh/maskimko/go-3ff)
 
 This utility shows modified Terrafrom resources by comparing two files
 Actually this is an open sourced version of Wix's *tfResDiff* tool
@@ -44,7 +48,15 @@ Environment variables
 
 *3ff_DEBUG* - Enables debug output (Like _-d_ flag)
 
+tfgrep
+------
 
+tfgrep utility acts like a regular grep but for .tf files. 
+It extracts the resource body by the given resource name pattern from terraform file, 
+or a directory with terraform files
+
+_Example_
+`$ ./tfgrep aws_instance instances.tf`
 
 Changelog
 ---------
@@ -62,3 +74,21 @@ Changelog
  
 *0.1.8*
 > Add GetTfResources method which returns all parsed terraform resource names, which can be used as targets in terraform
+
+*0.1.9*
+> Add some terraform HCL block resource type support
+
+*0.1.12*
+> Can return resource count
+
+*0.1.13*
+> Introduced GetTfResourcesCountByPath function
+
+*0.1.14*
+> Use of getCount for all known HCL resource types
+
+*0.1.15*
+> Remove "processing block" spam message in debug mode
+
+*0.1.16*
+> Support of tfgrep

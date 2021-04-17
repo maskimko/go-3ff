@@ -1,0 +1,29 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "diff.go",
+        "extensions.go",
+        "modified-resources.go",
+        "parse.go",
+        "printer.go",
+    ],
+    importpath = "github.com/maskimko/go-3ff/hclparser",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//diff:go_default_library",
+        "//utils:go_default_library",
+        "@com_github_fatih_color//:go_default_library",
+        "@com_github_hashicorp_hcl2//hcl:go_default_library",
+        "@com_github_hashicorp_hcl2//hcl/hclsyntax:go_default_library",
+        "@com_github_hashicorp_hcl2//hclparse:go_default_library",
+        "@com_github_zclconf_go_cty//cty:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["parse_test.go"],
+    embed = [":go_default_library"],
+)

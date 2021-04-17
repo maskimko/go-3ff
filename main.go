@@ -17,6 +17,7 @@ var minor string
 var revision string
 var Logger *log.Logger
 
+//optionSet is a CLI flags holder
 type optionSet struct {
 	version *bool
 	debug   *bool
@@ -28,18 +29,15 @@ type optionSet struct {
 	m *string
 }
 
+//checkEnv function checks environment variables for a debug flag
 func checkEnv(opts *optionSet) {
-	//if _, ok := os.LookupEnv("TFRESDIF_NOPB"); ok {
-	//	nopb := true
-	//	opts.nopb = &nopb
-	//}
-	//TODO: use viper library here
 	if _, ok := os.LookupEnv("3FF_DEBUG"); ok {
 		debug := true
 		opts.debug = &debug
 	}
 }
 
+//main function starts the binary
 func main() {
 	opts := parseOptions()
 	checkEnv(opts)
@@ -88,6 +86,7 @@ func main() {
 	}
 }
 
+//parseOptions function parses the command line arguments
 func parseOptions() *optionSet {
 	o := optionSet{}
 	o.debug = flag.Bool("d", false, "Enable debug output to StdErr")
