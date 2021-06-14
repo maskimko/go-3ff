@@ -9,25 +9,70 @@ import (
 	"strings"
 )
 
+//Deprecated use Extractor interface instead
 func GetResourceBody(resourceName string, f *os.File) (string, error) {
 	resourcePattern := fmt.Sprintf("resource\\.%s", resourceName)
 	return QueryBody(resourcePattern, f)
 }
 
+//Deprecated use Extractor interface instead
 func QueryBody(pattern string, f *os.File) (string, error) {
-	re, err := regexp.Compile(pattern)
+	var extractor Extractor = NewDefaultResourceExtractor()
+	return extractor.QueryBody(pattern, f)
+
+}
+
+func getResourceName(b *hclsyntax.Block) string {
+	parts := []string{b.Type}
+	parts = append(parts, b.Labels...)
+	return strings.Join(parts, LabelSeparator)
+}
+
+/*
+Use can use NewDefaultResourceExtractor function to create a default instance of the Extractor
+*/
+type Extractor interface {
+	QueryBody(pattern string, f *os.File) (string, error)
+	ResetCache()
+}
+
+type ResourceExtractorImpl struct {
+	cache map[string]*Body
+}
+
+func NewDefaultResourceExtractor() *ResourceExtractorImpl {
+	return &ResourceExtractorImpl{
+		cache: make(map[string]*Body),
+	}
+}
+func (r *ResourceExtractorImpl) QueryBody(pattern string, f *os.File) (string, error) {
+	if r.cache == nil {
+		r.ResetCache()
+	}
+	if f == nil {
+		return "", fmt.Errorf("nil value file reference provided")
+	}
+	fname := f.Name()
+	var err error
+	if _, ok := r.cache[fname]; !ok {
+		r.cache[fname], err = GetCumulativeBody(f)
+		if err != nil {
+			return "", err
+		}
+	}
+	return r.performBodyQuery(pattern, fname)
+}
+
+func (r *ResourceExtractorImpl) performBodyQuery(pattern, fname string) (string, error) {
+	var builder strings.Builder
+	queryRE, err := regexp.Compile(pattern)
 	if err != nil {
 		return "", fmt.Errorf("failed to compile given regex %s %w", pattern, err)
 	}
-	cumulativeBody, err := GetCumulativeBody(f)
-	if err != nil {
-		return "", err
-	}
-	var builder strings.Builder
-	if cumulativeBody != nil {
+	if cumulativeBody, ok := r.cache[fname]; ok && cumulativeBody != nil {
 		for _, b := range cumulativeBody.GetBlocks() {
 			rn := getResourceName(b)
-			if re.MatchString(rn) {
+			if queryRE.MatchString(rn) {
 				data, err := utils.GetStringFromRange(b.Range())
 				if err != nil {
 					return "", fmt.Errorf("failed to fetch body of resource %s %w", rn, err)
@@ -43,8 +88,6 @@ func QueryBody(pattern string, f *os.File) (string, error) {
 	return builder.String(), nil
 }
 
-func getResourceName(b *hclsyntax.Block) string {
-	parts := []string{b.Type}
-	parts = append(parts, b.Labels...)
-	return strings.Join(parts, LabelSeparator)
+func (r *ResourceExtractorImpl) ResetCache() {
+	r.cache = make(map[string]*Body)
 }
