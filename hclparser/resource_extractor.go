@@ -58,7 +58,7 @@ func (r *ResourceExtractorImpl) QueryBody(pattern string, f *os.File) (string, e
 	var err error
 	if _, ok := r.cache[fname]; !ok {
 		r.lock.Lock()
-		if _, doubleOK := r.cache[fname]; doubleOK {
+		if _, doubleOK := r.cache[fname]; !doubleOK {
 			r.cache[fname], err = GetCumulativeBody(f)
 			if err != nil {
 				return "", err
