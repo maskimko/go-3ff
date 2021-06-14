@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 )
 
 //Deprecated use Extractor interface instead
@@ -37,6 +38,7 @@ type Extractor interface {
 }
 
 type ResourceExtractorImpl struct {
+	lock  sync.Mutex
 	cache map[string]*Body
 }
 
@@ -55,10 +57,12 @@ func (r *ResourceExtractorImpl) QueryBody(pattern string, f *os.File) (string, e
 	fname := f.Name()
 	var err error
 	if _, ok := r.cache[fname]; !ok {
+		r.lock.Lock()
 		r.cache[fname], err = GetCumulativeBody(f)
 		if err != nil {
 			return "", err
 		}
+		r.lock.Unlock()
 	}
 	return r.performBodyQuery(pattern, fname)
 }
@@ -89,5 +93,7 @@ func (r *ResourceExtractorImpl) performBodyQuery(pattern, fname string) (string,
 }
 
 func (r *ResourceExtractorImpl) ResetCache() {
+	r.lock.Lock()
 	r.cache = make(map[string]*Body)
+	r.lock.Unlock()
 }
